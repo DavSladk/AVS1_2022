@@ -16,4 +16,11 @@ public:
 
 private:
     // @TODO add all internal parameters
+    int* data;
+    float* real;
+    float* img;
+
+    const size_t ALIGMENT = 64;
+
+    void initData();
 };
