@@ -7,6 +7,8 @@
 
 #include <BaseMandelCalculator.h>
 
+#define REDUCE
+
 class LineMandelCalculator : public BaseMandelCalculator
 {
 public:
@@ -15,10 +17,13 @@ public:
     int *calculateMandelbrot();
 
 private:
-    // @TODO add all internal parameters
     int* data;
     float* real;
     float* img;
+    
+    #ifdef REDUCE
+    bool* done;
+    #endif
 
     const size_t ALIGMENT = 64;
 
