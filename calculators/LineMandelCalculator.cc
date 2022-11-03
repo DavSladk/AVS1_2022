@@ -18,11 +18,12 @@ LineMandelCalculator::LineMandelCalculator (unsigned matrixBaseSize, unsigned li
 	BaseMandelCalculator(matrixBaseSize, limit, "LineMandelCalculator")
 {
 	data = (int *)_mm_malloc(height * width * sizeof(int), ALIGMENT);
-	real = (float *)_mm_malloc(height * width * sizeof(int), ALIGMENT);
-	img = (float *)_mm_malloc(height * width * sizeof(int), ALIGMENT);
-	#ifdef REDUCE
-	done = (bool *)_mm_malloc(height * width * sizeof(int), ALIGMENT);
-	#endif
+	real = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
+	img = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
+	x = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
+	y = (float *)_mm_malloc(height * sizeof(float), ALIGMENT);
+	isDone = (bool *)_mm_malloc(width * sizeof(bool), ALIGMENT);
+	
 	initData();
 }
 
@@ -30,79 +31,49 @@ LineMandelCalculator::~LineMandelCalculator() {
 	_mm_free(data);
 	_mm_free(real);
 	_mm_free(img);
+	_mm_free(isDone);
+	_mm_free(x);
+	_mm_free(y);
 	data = NULL;
 	real = NULL;
 	img = NULL;
-	#ifdef REDUCE
-	_mm_free(done);
-	done = NULL;
-	#endif
+	isDone = NULL;
+	x = NULL;
+	y = NULL;
 }
 
 int * LineMandelCalculator::calculateMandelbrot () {
 	for(int i = 0; i < height / 2 ; i++)
 	{
-		#ifndef REDUCE
-		float y = y_start + i * dy; // current imaginary value
-		for(int l = 0; l < limit; l++)
+		memset(real, 0, width * sizeof(float));
+		memset(img, 0, width * sizeof(float));
+		memset(isDone, 0, width * sizeof(bool));
+		int doneCounter = 0;
+		
+		for(int l = 0; l < limit && doneCounter < width; l++)
 		{
-			#pragma omp simd
+			doneCounter = 0;
+			#pragma omp simd reduction(+:doneCounter)
 			for(int j = 0; j < width; j++)
 			{
-				float x = x_start + j * dx; // current real value
-
 				int index = i * width + j;
 
-				float r2 = real[index] * real[index];
-				float i2 = img[index] * img[index];
+				float r2 = real[j] * real[j];
+				float i2 = img[j] * img[j];
+				bool outOfBound = r2+i2 > 4;
 
-				if(r2+i2 > 4)
-				{
-					data[index] = std::min(data[index], l);
-				}
-				else
-				{
-					img[index] = 2.0f * real[index] * img[index] + y;
-					real[index] = r2 - i2 + x;
-				}
+				float cImg = 2.0f * real[j] * img[j] + y[i];
+				float cReal = r2 - i2 + x[j];
+
+				isDone[j] = isDone[j] || outOfBound;
+				doneCounter += isDone[j];
+
+				data[index] = l * (!isDone[j]) + data[index] * isDone[j];
+
+				img[j] = cImg * (!isDone[j]) + img[j] * isDone[j];
+				real[j] = cReal * (!isDone[j]) + real[j] * isDone[j];
 			}
 		}
-		#else
-		float y = y_start + i * dy; // current imaginary value
-		int doneCount = 0;
-		for(int l = 0; l < limit && doneCount!=width; l++)
-		{
-			#pragma omp simd reduction(+:doneCount)
-			for(int j = 0; j < width; j++)
-			{
-				float x = x_start + j * dx; // current real value
-
-				int index = i * width + j;
-
-				float r2 = real[index] * real[index];
-				float i2 = img[index] * img[index];
-
-				if(done[index]) continue;
-
-				if(r2+i2 > 4)
-				{
-					data[index] = l;
-					done[index] = true;
-					doneCount++;
-				}
-				else
-				{
-					img[index] = 2.0f * real[index] * img[index] + y;
-					real[index] = r2 - i2 + x;
-				}
-			}
-		}
-		#endif
-	}
-	// memcpy is outside of main loop, because compiler doesn't like it inside, even if it is
-	// two loops away from simd loop
-	for(int i = 0; i < height / 2 ; i++)
-	{
 		memcpy(data+(width)*(height-1)-i*(width), data+i*(width), width * sizeof(int));
 	}
 
@@ -111,14 +82,16 @@ int * LineMandelCalculator::calculateMandelbrot () {
 
 void LineMandelCalculator::initData()
 {
-	for(int i = 0; i < height * width; i++)
+	memset(data, 0, width * height * sizeof(int));
+	memset(real, 0, width * sizeof(float));
+	memset(img, 0, width * sizeof(float));
+	memset(isDone, 0, width * sizeof(bool));
+	for(int i = 0; i < width; i++)
 	{
-		data[i] = limit;
+		x[i] = x_start + i * dx;
 	}
-	memset(real, 0, height * width * sizeof(float));
-	memset(img, 0, height * width * sizeof(float));
-	#ifdef REDUCE
-	memset(done, 0, height * width * sizeof(float));
-	#endif
-
+	for(int i = 0; i < height; i++)
+	{
+		y[i] = y_start + i * dy;
+	}
 }

@@ -7,7 +7,7 @@
 
 #include <BaseMandelCalculator.h>
 
-#define REDUCE
+//#define REDUCE
 
 class LineMandelCalculator : public BaseMandelCalculator
 {
@@ -20,10 +20,9 @@ private:
     int* data;
     float* real;
     float* img;
-    
-    #ifdef REDUCE
-    bool* done;
-    #endif
+    float* y; 
+    float* x; 
+    bool* isDone;
 
     const size_t ALIGMENT = 64;
 
