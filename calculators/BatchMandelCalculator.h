@@ -25,7 +25,7 @@ private:
     bool* isDone;
 
     const size_t ALIGMENT = 64;
-    const int BLOCK_SIZE = 256;
+    const int BATCH_SIZE = 256;
 
     void initData();
 };
