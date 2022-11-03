@@ -1,8 +1,8 @@
 /**
  * @file BatchMandelCalculator.h
- * @author FULL NAME <xlogin00@stud.fit.vutbr.cz>
+ * @author David Sladký (xsladk07@stud.fit.vutbr.cz)
  * @brief Implementation of Mandelbrot calculator that uses SIMD paralelization over small batches
- * @date DATE
+ * @date 2022-11-03
  */
 #ifndef BATCHMANDELCALCULATOR_H
 #define BATCHMANDELCALCULATOR_H
@@ -17,7 +17,17 @@ public:
     int * calculateMandelbrot();
 
 private:
-    // @TODO add all internal parameters
+    int* data;
+    float* real;
+    float* img;
+    float* y; 
+    float* x; 
+    bool* isDone;
+
+    const size_t ALIGMENT = 64;
+    const int BLOCK_SIZE = 256;
+
+    void initData();
 };
 
 #endif
