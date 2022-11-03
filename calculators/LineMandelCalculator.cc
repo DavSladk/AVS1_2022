@@ -46,7 +46,7 @@ int * LineMandelCalculator::calculateMandelbrot () {
 		float y = y_start + i * dy; // current imaginary value
 		for(int l = 0; l < limit; l++)
 		{
-			#pragma omp simd//aligned(data, real, img: 64)
+			#pragma omp simd
 			for(int j = 0; j < width; j++)
 			{
 				float x = x_start + j * dx; // current real value
@@ -72,7 +72,7 @@ int * LineMandelCalculator::calculateMandelbrot () {
 		int doneCount = 0;
 		for(int l = 0; l < limit && doneCount!=width; l++)
 		{
-			#pragma omp simd reduction(+:doneCount)//aligned(data, real, img: 64)
+			#pragma omp simd reduction(+:doneCount)
 			for(int j = 0; j < width; j++)
 			{
 				float x = x_start + j * dx; // current real value
