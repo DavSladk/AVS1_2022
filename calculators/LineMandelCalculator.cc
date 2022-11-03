@@ -2,8 +2,9 @@
  * @file LineMandelCalculator.cc
  * @author David Sladký (xsladk07@stud.fit.vutbr.cz)
  * @brief Implementation of Mandelbrot calculator that uses SIMD paralelization over lines
- * @date 2022-10-30
+ * @date 2022-11-03
  */
+ 
 #include <iostream>
 #include <string>
 #include <vector>
