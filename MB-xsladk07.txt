@@ -2,24 +2,51 @@
 
 1. Proč je nutné určovat, zda má výpočet pokračovat?
 ==============================================================================
-
+- Aby se zbytečne nepočítalo, když už víme, že bod z množiny vypadl. V tomhle případě,
+  zda celý řádek/batch vypadl.
+- Když bod vypadne z množiny, tak jeho hodnota jde k nekonečnu. Tohle v praxi
+  znamená, že počítáná hodnota přeteče a může se zase dostat do stavu, kdy bychom ji přijali.
 
 2. Byla "Line" vektorizace efektivní? Proč?
 ==============================================================================
-
+I když "Line" vektorizace provedla výpočet rychleji, s větším GFLOPS a aritmetickou
+intenzitou, tak oproti referenčnímu řešení nebyla efektivnější. "Line" celkem
+provedla 55.481 GFLOP a 17.176 GINTOP. Zatímco referenčí řešení provedlo pouze
+16.680 GFLOP a 4.460 GINTOP. To je způsobeno tím, že v "Line" probíhájí i
+výpočty, které se nakonec nepoužijí, čímž se vyhýbá použití podmínky.
+Nové hodnoty se v každém řádku počítají znovu i pro body, které už z množiny
+vypadly, protože kvůli vektorizaci se musí nové hodnoty vypočítat pro celý řádek
+dokud se nedojde do limitu nebo nevypadnou všechny body na řádku. Oproti tomu
+v referenčím řešení se počítání pro každý bod utne v okamžik, když bod vypadne
+z množiny a nečeká se na zbytek řádku nebo na limit.
 
 3. Jaká byla dosažena výkonnost v Intel Advisoru pro jednotlivé implementace 
 (v GFLOPS)?
 ==============================================================================
-
+- Ref: 2.22 GFLOPS
+- Line: 21.04 GFLOPS
+- Batch: 18.77 GFLOPS
 
 4. Jaká část kódu byla vektorizována v "Line" implementaci? Vyčteme tuto 
 informaci i u batch kalkulátoru?
 ==============================================================================
-
+V "Line" implementaci proběhla vektorizace smyčky na řádku 54.
+V "Batch" implemantaci proběhla vektorizace smyčky na řádku 52.
 
 5. Co vyčteme z Roofline modelu pro obě vektorizované implementace?
 ==============================================================================
+Line:
+- 23.022 GFLOPS pro samoutnou vektorizovanou smyčku
+- 7.12 GFLOPS pro samoutnou vektorizovanou smyčku
+- 0.36 airtmetická intenzita
+- ve smyčce program byl 2.410s
+- je omezeno pamětí, pro zlepšení výkonu bych měl lépe využívat cache.
+- lepší využití L2 cache by mohlo zvýšit GFLOPS až na 63.8
 
-
-
+Batch:
+- 24.213 GFLOPS pro samoutnou vektorizovanou smyčku
+- 7.07 GINTOPS pro samoutnou vektorizovanou smyčku
+- 0.36 airtmetická intenzita
+- ve smyčce program byl 0.840s
+- je omezeno pamětí, pro zlepšení výkonu bych měl lépe využívat cache.
+- lepší využití L2 cache by mohlo zvýšit GFLOPS až na 63.6
