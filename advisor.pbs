@@ -18,8 +18,7 @@ CC=icc CXX=icpc cmake ..
 make
 
 
-#for calc in "ref" "batch" "line"; do
-for calc in "ref" "line"; do
+for calc in "ref" "batch" "line"; do
     rm -rf Advisor-$calc
     mkdir Advisor-$calc
 
