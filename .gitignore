@@ -1,2 +1,7 @@
 build
 xsladk07.zip
+build_advisor
+build_evaluate
+AVS-evaluate.*
+AVS-Advisor.*
+datalog.csv
