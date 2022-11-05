@@ -11,7 +11,7 @@
 ==============================================================================
 I když "Line" vektorizace provedla výpočet rychleji, s větším GFLOPS a aritmetickou
 intenzitou, tak oproti referenčnímu řešení nebyla efektivnější. "Line" celkem
-provedla 55.481 GFLOP a 17.176 GINTOP. Zatímco referenčí řešení provedlo pouze
+provedla 71.781 GFLOP a 0.567 GINTOP. Zatímco referenčí řešení provedlo pouze
 16.680 GFLOP a 4.460 GINTOP. To je způsobeno tím, že v "Line" probíhájí i
 výpočty, které se nakonec nepoužijí, čímž se vyhýbá použití podmínky.
 Nové hodnoty se v každém řádku počítají znovu i pro body, které už z množiny
@@ -24,29 +24,27 @@ z množiny a nečeká se na zbytek řádku nebo na limit.
 (v GFLOPS)?
 ==============================================================================
 - Ref: 2.22 GFLOPS
-- Line: 21.04 GFLOPS
-- Batch: 18.77 GFLOPS
+- Line: 52.40 GFLOPS
+- Batch: 42.13 GFLOPS
 
 4. Jaká část kódu byla vektorizována v "Line" implementaci? Vyčteme tuto 
 informaci i u batch kalkulátoru?
 ==============================================================================
-V "Line" implementaci proběhla vektorizace smyčky na řádku 54.
-V "Batch" implemantaci proběhla vektorizace smyčky na řádku 52.
+V "Line" implementaci proběhla vektorizace smyčky na řádku 54 a 58.
+V "Batch" implemantaci proběhla vektorizace smyčky na řádku 63.
 
 5. Co vyčteme z Roofline modelu pro obě vektorizované implementace?
 ==============================================================================
 Line:
-- 23.022 GFLOPS pro samoutnou vektorizovanou smyčku
-- 7.12 GFLOPS pro samoutnou vektorizovanou smyčku
-- 0.36 airtmetická intenzita
-- ve smyčce program byl 2.410s
+- 67.073 GFLOPS pro samoutnou vektorizovanou smyčku
+- 0.571 airtmetická intenzita
+- ve smyčce program byl 1.070s
 - je omezeno pamětí, pro zlepšení výkonu bych měl lépe využívat cache.
-- lepší využití L2 cache by mohlo zvýšit GFLOPS až na 63.8
+- lepší využití L2 cache by mohlo zvýšit GFLOPS až na ~80
 
 Batch:
-- 24.213 GFLOPS pro samoutnou vektorizovanou smyčku
-- 7.07 GINTOPS pro samoutnou vektorizovanou smyčku
-- 0.36 airtmetická intenzita
-- ve smyčce program byl 0.840s
+- 102.549 GFLOPS pro samoutnou vektorizovanou smyčku
+- 0.556 airtmetická intenzita
+- ve smyčce program byl 0.250s
 - je omezeno pamětí, pro zlepšení výkonu bych měl lépe využívat cache.
-- lepší využití L2 cache by mohlo zvýšit GFLOPS až na 63.6
+- lepší využití L1 cache by mohlo zvýšit GFLOPS až na 159.3
