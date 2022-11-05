@@ -79,7 +79,6 @@ int * BatchMandelCalculator::calculateMandelbrot () {
 			}
 
 			int index = i*width + lineBatch * BATCH_SIZE;
-			#pragma omp simd
 			for(int c = 0; c < BATCH_SIZE; c++)
 			{
 				data[index + c] = static_cast<int>(oneBatchData[c]);

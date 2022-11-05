@@ -74,7 +74,6 @@ int * LineMandelCalculator::calculateMandelbrot () {
 		}
 		
 		int index = i*width;
-		#pragma omp simd
 		for(int c = 0; c < width; c++)
 		{
 			data[index + c] = static_cast<int>(oneLineData[c]);
