@@ -22,7 +22,7 @@ private:
     float* img;
     float* y; 
     float* x; 
-    bool* isDone;
+    float* oneBatchData;
 
     const size_t ALIGMENT = 64;
     const int BATCH_SIZE = 256;

@@ -23,9 +23,9 @@ BatchMandelCalculator::BatchMandelCalculator (unsigned matrixBaseSize, unsigned 
 	real = (float *)_mm_malloc(BATCH_SIZE * sizeof(float), ALIGMENT);
 	img = (float *)_mm_malloc(BATCH_SIZE * sizeof(float), ALIGMENT);
 	x = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
-	y = (float *)_mm_malloc(height * sizeof(float), ALIGMENT);
-	isDone = (bool *)_mm_malloc(BATCH_SIZE * sizeof(bool), ALIGMENT);
-	
+	y = (float *)_mm_malloc(height/2 * sizeof(float), ALIGMENT);
+	oneBatchData = (float *)_mm_malloc(BATCH_SIZE * sizeof(float), ALIGMENT);
+
 	initData();
 }
 
@@ -33,13 +33,13 @@ BatchMandelCalculator::~BatchMandelCalculator() {
 	_mm_free(data);
 	_mm_free(real);
 	_mm_free(img);
-	_mm_free(isDone);
+	_mm_free(oneBatchData);
 	_mm_free(x);
 	_mm_free(y);
 	data = NULL;
 	real = NULL;
 	img = NULL;
-	isDone = NULL;
+	oneBatchData = NULL;
 	x = NULL;
 	y = NULL;
 }
@@ -53,8 +53,8 @@ int * BatchMandelCalculator::calculateMandelbrot () {
 		{
 			memset(real, 0, BATCH_SIZE * sizeof(float));
 			memset(img, 0, BATCH_SIZE * sizeof(float));
-			memset(isDone, 0, BATCH_SIZE * sizeof(bool));
-			int doneCounter = 0;
+			memset(oneBatchData, 0, BATCH_SIZE * sizeof(float));
+			float doneCounter = 0;
 
 			for(int l = 0; l < limit && doneCounter < BATCH_SIZE; l++)
 			{
@@ -62,25 +62,28 @@ int * BatchMandelCalculator::calculateMandelbrot () {
 				#pragma omp simd reduction(+:doneCounter)
 				for(int j = 0; j < BATCH_SIZE; j++)
 				{
-					int index = i*width + lineBatch * BATCH_SIZE + j;
-
 					float r2 = real[j] * real[j];
 					float i2 = img[j] * img[j];
-					bool outOfBound = r2+i2 > 4;
+					float outOfBound = r2+i2 > 4.0f;
 
 					float cImg = 2.0f * real[j] * img[j] + y[i];
 					float cReal = r2 - i2 + x[lineBatch * BATCH_SIZE + j];
 
-					isDone[j] = isDone[j] || outOfBound;
-					doneCounter += isDone[j];
+					doneCounter += outOfBound;
 
-					data[index] = l * (!isDone[j]) + data[index] * isDone[j];
+					oneBatchData[j] = l * ((outOfBound-1.0f)*(-1.0f)) + oneBatchData[j] * outOfBound;
 
-					img[j] = cImg * (!isDone[j]) + img[j] * isDone[j];
-					real[j] = cReal * (!isDone[j]) + real[j] * isDone[j];
+					img[j] = cImg * (outOfBound-1.0f) + img[j] * outOfBound;
+					real[j] = cReal * (outOfBound-1.0f) + real[j] * outOfBound;
 				}
 			}
 
+			int index = i*width + lineBatch * BATCH_SIZE;
+			#pragma omp simd
+			for(int c = 0; c < BATCH_SIZE; c++)
+			{
+				data[index + c] = static_cast<int>(oneBatchData[c]);
+			}
 		}
 
 	}
@@ -98,12 +101,12 @@ void BatchMandelCalculator::initData()
 	memset(data, 0, width * height * sizeof(int));
 	memset(real, 0, BATCH_SIZE * sizeof(float));
 	memset(img, 0, BATCH_SIZE * sizeof(float));
-	memset(isDone, 0, BATCH_SIZE * sizeof(bool));
+	memset(oneBatchData, 0, BATCH_SIZE * sizeof(float));
 	for(int i = 0; i < width; i++)
 	{
 		x[i] = x_start + i * dx;
 	}
-	for(int i = 0; i < height; i++)
+	for(int i = 0; i < height/2; i++)
 	{
 		y[i] = y_start + i * dy;
 	}

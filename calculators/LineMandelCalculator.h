@@ -20,7 +20,7 @@ private:
     float* img;
     float* y; 
     float* x; 
-    bool* isDone;
+    float* oneLineData;
 
     const size_t ALIGMENT = 64;
 

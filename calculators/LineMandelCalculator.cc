@@ -22,9 +22,9 @@ LineMandelCalculator::LineMandelCalculator (unsigned matrixBaseSize, unsigned li
 	real = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
 	img = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
 	x = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
-	y = (float *)_mm_malloc(height * sizeof(float), ALIGMENT);
-	isDone = (bool *)_mm_malloc(width * sizeof(bool), ALIGMENT);
-	
+	y = (float *)_mm_malloc(height/2 * sizeof(float), ALIGMENT);
+	oneLineData = (float *)_mm_malloc(width * sizeof(float), ALIGMENT);
+
 	initData();
 }
 
@@ -32,13 +32,13 @@ LineMandelCalculator::~LineMandelCalculator() {
 	_mm_free(data);
 	_mm_free(real);
 	_mm_free(img);
-	_mm_free(isDone);
+	_mm_free(oneLineData);
 	_mm_free(x);
 	_mm_free(y);
 	data = NULL;
 	real = NULL;
 	img = NULL;
-	isDone = NULL;
+	oneLineData = NULL;
 	x = NULL;
 	y = NULL;
 }
@@ -48,32 +48,36 @@ int * LineMandelCalculator::calculateMandelbrot () {
 	{
 		memset(real, 0, width * sizeof(float));
 		memset(img, 0, width * sizeof(float));
-		memset(isDone, 0, width * sizeof(bool));
-		int doneCounter = 0;
-		
+		memset(oneLineData, 0, width * sizeof(float));
+		float doneCounter = 0;
+
 		for(int l = 0; l < limit && doneCounter < width; l++)
 		{
-			doneCounter = 0;
+			doneCounter = 0.0f;
 			#pragma omp simd reduction(+:doneCounter)
 			for(int j = 0; j < width; j++)
 			{
-				int index = i * width + j;
-
 				float r2 = real[j] * real[j];
 				float i2 = img[j] * img[j];
-				bool outOfBound = r2+i2 > 4;
+				float outOfBound = r2+i2 > 4.0f;
 
 				float cImg = 2.0f * real[j] * img[j] + y[i];
 				float cReal = r2 - i2 + x[j];
 
-				isDone[j] = isDone[j] || outOfBound;
-				doneCounter += isDone[j];
+				doneCounter += outOfBound;
 
-				data[index] = l * (!isDone[j]) + data[index] * isDone[j];
+				oneLineData[j] = l * ((outOfBound-1.0f)*(-1.0f)) + oneLineData[j] * outOfBound;
 
-				img[j] = cImg * (!isDone[j]) + img[j] * isDone[j];
-				real[j] = cReal * (!isDone[j]) + real[j] * isDone[j];
+				img[j] = cImg * (outOfBound-1.0f) + img[j] * outOfBound;
+				real[j] = cReal * (outOfBound-1.0f) + real[j] * outOfBound;
 			}
+		}
+		
+		int index = i*width;
+		#pragma omp simd
+		for(int c = 0; c < width; c++)
+		{
+			data[index + c] = static_cast<int>(oneLineData[c]);
 		}
 		memcpy(data+(width)*(height-1)-i*(width), data+i*(width), width * sizeof(int));
 	}
@@ -86,12 +90,12 @@ void LineMandelCalculator::initData()
 	memset(data, 0, width * height * sizeof(int));
 	memset(real, 0, width * sizeof(float));
 	memset(img, 0, width * sizeof(float));
-	memset(isDone, 0, width * sizeof(bool));
+	memset(oneLineData, 0, width * sizeof(float));
 	for(int i = 0; i < width; i++)
 	{
 		x[i] = x_start + i * dx;
 	}
-	for(int i = 0; i < height; i++)
+	for(int i = 0; i < height/2; i++)
 	{
 		y[i] = y_start + i * dy;
 	}
