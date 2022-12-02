@@ -1,1 +1,1 @@
-### Hodnocení ?/10
+### Hodnocení 10/10
